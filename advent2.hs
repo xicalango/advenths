@@ -42,6 +42,8 @@ data GameState = GameState { gsRooms :: M.Map String Room
                            , gsInventory :: S.Set String
                            }
 
+type Game a = StateT GameState IO a
+
 items = [Item { iID = "cage"
               , iPre = "a little"
               , iName = "cage"
@@ -70,14 +72,14 @@ rooms = [Room { rID = "main"
               }
         ,Room { rID = "beast"
               , rTitle = "Back East"
-              , rDesc = "You have come to the beast!"
+              , rDesc = "You have come to the beast!\nThe only exit is to the south."
               , rExits = M.fromList [(South,"back")]
               , rVisited = False
               , rItems = S.empty 
               }
         ,Room { rID = "best"
               , rTitle = "Back West"
-              , rDesc = "This is the west."
+              , rDesc = "This is the west.\nThe only exit is to the south."
               , rExits = M.fromList [(South,"back")]
               , rVisited = False
               , rItems = S.fromList ["rod"]
@@ -85,7 +87,7 @@ rooms = [Room { rID = "main"
         ]
 
 
-buildGame :: [Room] -> [Item] -> StateT GameState IO ()
+buildGame :: [Room] -> [Item] -> Game ()
 buildGame newRooms newItems = do
 	state <- get
 	let rooms = M.fromList [(getRoomID r,r) | r <- newRooms]
@@ -95,7 +97,7 @@ buildGame newRooms newItems = do
 getItemID :: Item -> String
 getItemID item = iID item
 
-getItem :: String -> StateT GameState IO Item
+getItem :: String -> Game Item
 getItem id = do
 	state <- get
 	case (M.lookup id (gsItems state) ) :: Maybe Item of
@@ -105,14 +107,14 @@ getItem id = do
 getRoomID :: Room -> String
 getRoomID room = rID room
 
-getRoom :: String -> StateT GameState IO Room
+getRoom :: String -> Game Room
 getRoom id = do
 	state <- get
 	case (M.lookup id (gsRooms state) ) :: Maybe Room of
 		Just room -> return room
 		Nothing -> return undefined
 		
-setRoom :: String -> StateT GameState IO ()
+setRoom :: String -> Game ()
 setRoom id = do
 	state <- get
 	let newRoom = if (M.member id (gsRooms state) ) 
@@ -120,13 +122,13 @@ setRoom id = do
 		else gsInRoom state
 	put $ state{ gsInRoom = newRoom }
 
-updateRoom :: Room -> StateT GameState IO ()
+updateRoom :: Room -> Game ()
 updateRoom r = let rid = getRoomID r in do
 	state <- get
 	let newrooms = M.adjust (const r) rid $ gsRooms state
 	put $ state{ gsRooms = newrooms }
 
-updateInventory :: S.Set String -> StateT GameState IO ()
+updateInventory :: S.Set String -> Game ()
 updateInventory set = do
 	state <- get
 	put $ state{ gsInventory = set }
@@ -134,10 +136,10 @@ updateInventory set = do
 getExit :: Dir -> Room -> Maybe String
 getExit dir room = M.lookup dir (rExits room) 
 
-printItemList :: String -> S.Set String -> StateT GameState IO ()
+printItemList :: String -> S.Set String -> Game ()
 printItemList pre set = printItemList' pre $ S.elems set
 	where
-		printItemList' :: String -> [String] -> StateT GameState IO ()
+		printItemList' :: String -> [String] -> Game ()
 		printItemList' _ [] = return ()
 		printItemList' pre (l:ls) = do
 			item <- getItem l
@@ -152,7 +154,7 @@ printRoom (Room { rTitle = title, rDesc = desc, rVisited = visited}) = do
 		then return ()
 		else putStrLn desc
 
-hasInventory :: String -> StateT GameState IO Bool
+hasInventory :: String -> Game Bool
 hasInventory id = do
 	state <- get
 	return $ S.member id $ gsInventory state
@@ -178,7 +180,7 @@ parseInput ["drop"]        = Drop Nothing
 parseInput ("drop":os)   = Drop $ Just $ unwords os
 parseInput s               = NAA $ unwords s
 
-actGoto :: Dir -> StateT GameState IO ()
+actGoto :: Dir -> Game ()
 actGoto dir = do
 	state <- get
 	room <- getRoom $ gsInRoom state
@@ -186,7 +188,7 @@ actGoto dir = do
 		Just new -> setRoom new
 		Nothing -> lift $ putStrLn $ "There's no exit to the " ++ (show dir) ++ "."
 
-actLook :: StateT GameState IO ()
+actLook :: Game ()
 actLook = do
 	state <- get
 	room <- getRoom $ gsInRoom state
@@ -197,52 +199,52 @@ printItemInfo :: Item -> IO ()
 printItemInfo (Item{iDesc = desc}) = do
 	putStrLn $ desc
 
-actLookAt :: String -> StateT GameState IO ()
+actLookAt :: String -> Game ()
 actLookAt at = do
 	state <- get
 	room <- getRoom $ gsInRoom state
-	case S.member at (gsInventory state) of
-		True -> do 
+	if S.member at (gsInventory state)
+		then do 
 			item <- getItem at
 			lift $ printItemInfo item
-		False -> do
-			case S.member at (rItems room) of
-				True -> do 
+		else do
+			if S.member at (rItems room)
+				then do 
 					item <- getItem at
 					lift $ printItemInfo item
-				False -> lift $ putStrLn $ "Don't see " ++ at ++ " here."
+				else lift $ putStrLn $ "Don't see " ++ at ++ " here."
 	
 
-actInventory :: StateT GameState IO ()
+actInventory :: Game ()
 actInventory = do
 	state <- get
 	printItemList "You have" $ gsInventory state
 
-actPickup :: String -> StateT GameState IO ()
+actPickup :: String -> Game ()
 actPickup obj = do
 	state <- get
 	room <- getRoom $ gsInRoom state
-	case S.member obj (rItems room) of
-		True -> do
+	if S.member obj (rItems room)
+		then do
 			let newRoomItems = S.delete obj (rItems room)
 			let newInventory = S.insert obj (gsInventory state)
 			updateRoom room{ rItems = newRoomItems }
 			updateInventory newInventory
-		False -> lift $ putStrLn $ "I can't see " ++ obj ++ " here."
+		else lift $ putStrLn $ "I can't see " ++ obj ++ " here."
 
-actDrop :: String -> StateT GameState IO ()
+actDrop :: String -> Game ()
 actDrop obj = do
 	state <- get
 	room <- getRoom $ gsInRoom state
-	case S.member obj (gsInventory state) of
-		True -> do
+	if S.member obj (gsInventory state)
+		then do
 			let newInventory = S.delete obj (gsInventory state)
 			let newRoomItems = S.insert obj (rItems room)
 			updateRoom room{ rItems = newRoomItems }
 			updateInventory newInventory
-		False -> lift $ putStrLn $ "I don't have " ++ obj ++ "." 
+		else lift $ putStrLn $ "I don't have " ++ obj ++ "." 
 
-doAction :: Action -> StateT GameState IO ()
+doAction :: Action -> Game ()
 doAction (Goto dir)   = actGoto dir
 doAction (Look Nothing) = actLook
 doAction (Look (Just at)) = actLookAt at
@@ -254,29 +256,28 @@ doAction (Drop (Just obj))   = actDrop obj
 doAction Quit         = lift $ throw (ErrorCall "Quit")
 doAction (NAA str)    = lift $ putStrLn $ "Don't know how to " ++ str ++ "."
 
-playGame :: StateT GameState IO ()
+playGame :: Game ()
 playGame = do
 	showCurrentRoom
 	lift $ putStr "> "
 	line <- lift $ getLine
 	doAction $ parseInput $ words line
 	where
-		showCurrentRoom :: StateT GameState IO ()
+		showCurrentRoom :: Game ()
 		showCurrentRoom = do
 			state <- get
 			room <- getRoom $ gsInRoom state
 			lift $ printRoom room
 			printItemList "There is" $ rItems room
-			case rVisited room of
-				True -> return()
-				False -> updateRoom room{ rVisited=True }
+			if rVisited room
+				then return()
+				else updateRoom room{ rVisited=True }
 
 		
-doGame :: StateT GameState IO ()
+doGame :: Game ()
 doGame = do
 	setupGame
 	forever $ playGame
-	return ()
 	where
 		setupGame = do
 			buildGame rooms items
