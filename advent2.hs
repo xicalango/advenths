@@ -166,27 +166,27 @@ itemInRoom id r = S.member id (rItems r)
 parseInput :: [String] -> Action
 parseInput ["north"]				= Goto North
 parseInput ["south"]				= Goto South
-parseInput ["east"]					= Goto East
-parseInput ["west"]					= Goto West
-parseInput ["n"]						= Goto North
-parseInput ["s"]						= Goto South
-parseInput ["e"]						= Goto East
-parseInput ["w"]						= Goto West
+parseInput ["east"]				= Goto East
+parseInput ["west"]				= Goto West
+parseInput ["n"]				= Goto North
+parseInput ["s"]				= Goto South
+parseInput ["e"]				= Goto East
+parseInput ["w"]				= Goto West
 
-parseInput ["look"]					= Look Nothing
-parseInput ("look":"at":os)	= Look $ Just $ unwords os
-parseInput ("look":os)			= Look $ Just $ unwords os
+parseInput ["look"]				= Look Nothing
+parseInput ("look":"at":os)			= Look $ Just $ unwords os
+parseInput ("look":os)				= Look $ Just $ unwords os
 
 parseInput ["invent"]				= Inventory
 parseInput ["pickup"]				= Pickup Nothing
-parseInput ("pickup":os)		= Pickup $ Just $ unwords os
-parseInput ["get"]					= Pickup Nothing
+parseInput ("pickup":os)			= Pickup $ Just $ unwords os
+parseInput ["get"]				= Pickup Nothing
 parseInput ("get":os)				= Pickup $ Just $ unwords os
-parseInput ["drop"]					= Drop Nothing
-parseInput ("drop":os)			= Drop $ Just $ unwords os
+parseInput ["drop"]				= Drop Nothing
+parseInput ("drop":os)				= Drop $ Just $ unwords os
 
-parseInput ["quit"]					= Quit
-parseInput s								= NAA $ unwords s
+parseInput ["quit"]				= Quit
+parseInput s					= NAA $ unwords s
 
 actGoto :: Dir -> Game ()
 actGoto dir = do
