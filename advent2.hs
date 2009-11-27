@@ -6,21 +6,19 @@ import Control.Monad.State
 import Control.Exception
 import System.IO
 
-data Dir = 
-	  North
-	| East
-	| South
-	| West
+data Dir = North
+	       | East
+	       | South
+	       | West
 	deriving (Ord,Eq,Show)
 
-data Action =
-	  Goto Dir
-	| Quit
-	| Look (Maybe String)
-	| Inventory
-	| Pickup (Maybe String)
-	| Drop (Maybe String)
-	| NAA String --Not an Action
+data Action = Goto Dir
+	          | Quit
+	          | Look (Maybe String)
+	          | Inventory
+	          | Pickup (Maybe String)
+	          | Drop (Maybe String)
+	          | NAA String --Not an Action
 
 data Room = Room { rID :: String
                  , rTitle :: String
@@ -94,6 +92,9 @@ buildGame newRooms newItems = do
 	let items = M.fromList [(getItemID i,i) | i <- newItems]
 	put $ state{ gsRooms = rooms, gsItems = items }
 	          
+itemFullName :: Item -> String
+itemFullName (Item{ iPre = pre, iName = name}) = pre ++ " " ++ name
+
 getItemID :: Item -> String
 getItemID item = iID item
 
@@ -143,7 +144,7 @@ printItemList pre set = printItemList' pre $ S.elems set
 		printItemList' _ [] = return ()
 		printItemList' pre (l:ls) = do
 			item <- getItem l
-			lift $ putStrLn $ pre ++ " " ++ (iPre item) ++ " " ++ (iName item) ++ "."
+			lift $ putStrLn $ pre ++ " " ++ (itemFullName item) ++ "."
 			printItemList' pre ls
 
 printRoom :: Room -> IO ()
@@ -163,22 +164,29 @@ itemInRoom :: String -> Room -> Bool
 itemInRoom id r = S.member id (rItems r)
 
 parseInput :: [String] -> Action
-parseInput ["north"]       = Goto North
-parseInput ["south"]       = Goto South
-parseInput ["east"]        = Goto East
-parseInput ["west"]        = Goto West
-parseInput ["quit"]        = Quit
-parseInput ["look"]        = Look Nothing
-parseInput ("look":"at":os)   = Look $ Just $ unwords os
-parseInput ("look":os)   = Look $ Just $ unwords os
-parseInput ["invent"]      = Inventory
-parseInput ["pickup"]      = Pickup Nothing
-parseInput ("pickup":os) = Pickup $ Just $ unwords os
-parseInput ["get"]      = Pickup Nothing
-parseInput ("get":os) = Pickup $ Just $ unwords os
-parseInput ["drop"]        = Drop Nothing
-parseInput ("drop":os)   = Drop $ Just $ unwords os
-parseInput s               = NAA $ unwords s
+parseInput ["north"]				= Goto North
+parseInput ["south"]				= Goto South
+parseInput ["east"]					= Goto East
+parseInput ["west"]					= Goto West
+parseInput ["n"]						= Goto North
+parseInput ["s"]						= Goto South
+parseInput ["e"]						= Goto East
+parseInput ["w"]						= Goto West
+
+parseInput ["look"]					= Look Nothing
+parseInput ("look":"at":os)	= Look $ Just $ unwords os
+parseInput ("look":os)			= Look $ Just $ unwords os
+
+parseInput ["invent"]				= Inventory
+parseInput ["pickup"]				= Pickup Nothing
+parseInput ("pickup":os)		= Pickup $ Just $ unwords os
+parseInput ["get"]					= Pickup Nothing
+parseInput ("get":os)				= Pickup $ Just $ unwords os
+parseInput ["drop"]					= Drop Nothing
+parseInput ("drop":os)			= Drop $ Just $ unwords os
+
+parseInput ["quit"]					= Quit
+parseInput s								= NAA $ unwords s
 
 actGoto :: Dir -> Game ()
 actGoto dir = do
@@ -230,6 +238,8 @@ actPickup obj = do
 			let newInventory = S.insert obj (gsInventory state)
 			updateRoom room{ rItems = newRoomItems }
 			updateInventory newInventory
+			item <- getItem obj
+			lift $ putStrLn $ "Got " ++ (itemFullName item) ++ "."
 		else lift $ putStrLn $ "I can't see " ++ obj ++ " here."
 
 actDrop :: String -> Game ()
@@ -242,19 +252,21 @@ actDrop obj = do
 			let newRoomItems = S.insert obj (rItems room)
 			updateRoom room{ rItems = newRoomItems }
 			updateInventory newInventory
+			item <- getItem obj
+			lift $ putStrLn $ "Dropped " ++ (itemFullName item) ++ "."
 		else lift $ putStrLn $ "I don't have " ++ obj ++ "." 
 
 doAction :: Action -> Game ()
-doAction (Goto dir)   = actGoto dir
-doAction (Look Nothing) = actLook
-doAction (Look (Just at)) = actLookAt at
-doAction Inventory    = actInventory
-doAction (Pickup Nothing)  = lift $ putStrLn $ "Pickup what?"
+doAction (Goto dir)          = actGoto dir
+doAction (Look Nothing)      = actLook
+doAction (Look (Just at))    = actLookAt at
+doAction Inventory           = actInventory
+doAction (Pickup Nothing)    = lift $ putStrLn $ "Pickup what?"
 doAction (Pickup (Just obj)) = actPickup obj
-doAction (Drop Nothing)    = lift $ putStrLn $ "Drop what?"
+doAction (Drop Nothing)      = lift $ putStrLn $ "Drop what?"
 doAction (Drop (Just obj))   = actDrop obj
-doAction Quit         = lift $ throw (ErrorCall "Quit")
-doAction (NAA str)    = lift $ putStrLn $ "Don't know how to " ++ str ++ "."
+doAction Quit                = lift $ throw (ErrorCall "Quit")
+doAction (NAA str)           = lift $ putStrLn $ "Don't know how to " ++ str ++ "."
 
 playGame :: Game ()
 playGame = do
@@ -287,6 +299,4 @@ main :: IO ()
 main = do
 	hSetBuffering stdout NoBuffering
 	evalStateT (doGame) $ GameState M.empty M.empty "" S.empty
---	doRoom $ getRoom "main"
---	putStrLn "Bye!"
 
