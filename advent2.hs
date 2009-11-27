@@ -1,7 +1,10 @@
+module Main where
+
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Monad.State
 import Control.Exception
+import System.IO
 
 data Dir = 
 	  North
@@ -164,6 +167,7 @@ actLook = do
 	state <- get
 	room <- getRoom $ gsInRoom state
 	lift $ printRoom room{rVisited = False}
+	printItemList "There is" $ rItems room
 
 actInventory :: StateT GameState IO ()
 actInventory = do
@@ -174,7 +178,7 @@ actPickup :: StateT GameState IO ()
 actPickup = return () --TODO
 
 actDrop :: StateT GameState IO ()
-actDrop = return () --  TODO
+actDrop = return ()   --TODO
 
 doAction :: Action -> StateT GameState IO ()
 doAction (Goto dir) = actGoto dir
@@ -216,6 +220,7 @@ doGame = do
 
 main :: IO ()
 main = do
+	hSetBuffering stdout NoBuffering
 	evalStateT (doGame) $ GameState M.empty M.empty "" S.empty
 --	doRoom $ getRoom "main"
 --	putStrLn "Bye!"
