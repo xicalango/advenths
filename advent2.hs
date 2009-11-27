@@ -18,8 +18,8 @@ data Action =
 	| Quit
 	| Look (Maybe String)
 	| Inventory
-	| Pickup String
-	| Drop String
+	| Pickup (Maybe String)
+	| Drop (Maybe String)
 	| NAA String --Not an Action
 
 data Room = Room { rID :: String
@@ -133,17 +133,6 @@ updateInventory set = do
 
 getExit :: Dir -> Room -> Maybe String
 getExit dir room = M.lookup dir (rExits room) 
-{-	case M.member dir (rExits room) of
-		True -> Just 
-	if hasDir room dir
-	then Just $ getExit' dir $ rExits room
-	else Nothing
-	where
-		getExit' :: Dir -> [Exit] -> String
-		getExit' _ [] = ""
-		getExit' dir (e:es)
-			| fst e == dir = snd e
-			| otherwise = getExit' dir es-}
 
 printItemList :: String -> S.Set String -> StateT GameState IO ()
 printItemList pre set = printItemList' pre $ S.elems set
@@ -163,9 +152,6 @@ printRoom (Room { rTitle = title, rDesc = desc, rVisited = visited}) = do
 		then return ()
 		else putStrLn desc
 
-{-hasDir :: Room -> Dir -> Bool
-hasDir (Room {rExits = dirs}) dir = any (==dir) $ map fst dirs-}
-
 hasInventory :: String -> StateT GameState IO Bool
 hasInventory id = do
 	state <- get
@@ -181,15 +167,15 @@ parseInput ["east"]        = Goto East
 parseInput ["west"]        = Goto West
 parseInput ["quit"]        = Quit
 parseInput ["look"]        = Look Nothing
-parseInput ("look":"at":o:[])   = Look $ Just o
-parseInput ("look":o:[])   = Look $ Just o
+parseInput ("look":"at":os)   = Look $ Just $ unwords os
+parseInput ("look":os)   = Look $ Just $ unwords os
 parseInput ["invent"]      = Inventory
-parseInput ["pickup"]      = Pickup ""
-parseInput ("pickup":o:[]) = Pickup o
-parseInput ["get"]      = Pickup ""
-parseInput ("get":o:[]) = Pickup o
-parseInput ["drop"]        = Drop ""
-parseInput ("drop":o:[])   = Drop o
+parseInput ["pickup"]      = Pickup Nothing
+parseInput ("pickup":os) = Pickup $ Just $ unwords os
+parseInput ["get"]      = Pickup Nothing
+parseInput ("get":os) = Pickup $ Just $ unwords os
+parseInput ["drop"]        = Drop Nothing
+parseInput ("drop":os)   = Drop $ Just $ unwords os
 parseInput s               = NAA $ unwords s
 
 actGoto :: Dir -> StateT GameState IO ()
@@ -261,10 +247,10 @@ doAction (Goto dir)   = actGoto dir
 doAction (Look Nothing) = actLook
 doAction (Look (Just at)) = actLookAt at
 doAction Inventory    = actInventory
-doAction (Pickup "")  = lift $ putStrLn $ "Pickup what?"
-doAction (Pickup obj) = actPickup obj
-doAction (Drop "")    = lift $ putStrLn $ "Drop what?"
-doAction (Drop obj)   = actDrop obj
+doAction (Pickup Nothing)  = lift $ putStrLn $ "Pickup what?"
+doAction (Pickup (Just obj)) = actPickup obj
+doAction (Drop Nothing)    = lift $ putStrLn $ "Drop what?"
+doAction (Drop (Just obj))   = actDrop obj
 doAction Quit         = lift $ throw (ErrorCall "Quit")
 doAction (NAA str)    = lift $ putStrLn $ "Don't know how to " ++ str ++ "."
 
