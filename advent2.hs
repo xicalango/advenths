@@ -262,6 +262,7 @@ doAction (Pickup (Just obj)) = actPickup obj
 doAction (Drop Nothing)      = lift $ putStrLn $ "Drop what?"
 doAction (Drop (Just obj))   = actDrop obj
 doAction Quit                = lift $ throw (ErrorCall "Quit")
+doAction (NAA "")            = return ()
 doAction (NAA str)           = lift $ putStrLn $ "Don't know how to " ++ str ++ "."
 
 playGame :: Game ()
