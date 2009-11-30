@@ -118,7 +118,7 @@ getRoom id = do
 setRoom :: String -> Game ()
 setRoom id = do
   state <- get
-  let newRoom = if (M.member id (gsRooms state) ) then id else gsInRoom state
+  let newRoom = if (M.member id (gsRooms state)) then id else gsInRoom state
   put $ state{ gsInRoom = newRoom }
 
 updateRoom :: Room -> Game ()
