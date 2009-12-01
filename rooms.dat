@@ -1,0 +1,30 @@
+[Room { rID = "main"
+      , rTitle = "Mainway"
+      , rDesc = "This is the mainway.\nThere is a small passage to the north."
+      , rExits = fromList [(North,"back")]
+      , rVisited = False 
+      , rItems = fromList ["cage"]
+      }
+,Room { rID = "back"
+      , rTitle = "Backway"
+      , rDesc = "This is the backway.\nThere is a big passage to the south.\nAlso you can go east and west."
+      , rExits = fromList [(South,"main"),(East,"beast"),(West,"best")]
+      , rVisited = False
+      , rItems = fromList [] 
+      }
+,Room { rID = "beast"
+      , rTitle = "Back East"
+      , rDesc = "You have come to the beast!\nThe only exit is to the south."
+      , rExits = fromList [(South,"back")]
+      , rVisited = False
+      , rItems = fromList [] 
+}
+,Room { rID = "best"
+      , rTitle = "Back West"
+      , rDesc = "This is the west.\nThe only exit is to the south."
+      , rExits = fromList [(South,"back")]
+      , rVisited = False
+      , rItems = fromList ["rod"]
+      }
+]
+
