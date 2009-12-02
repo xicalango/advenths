@@ -3,6 +3,11 @@ module GameState ( Dir(..)
                  , Item(..)
                  , GameState(..)
                  , Game
+                 , Event(..)
+                 , Command(..)
+                 , Cond(..)
+                 , Script
+                 , EventHandlers
                  , emptyGameState
                  , buildGame
                  , itemFullName
@@ -19,6 +24,8 @@ module GameState ( Dir(..)
                  , printItemList
                  , printItemInfo
                  , printRoom
+                 , runScript
+                 , evalEvent
                  )
 where
 
@@ -31,7 +38,7 @@ data Dir = North
          | East
          | South
          | West
-  deriving (Ord,Eq,Read,Show)
+         deriving (Ord,Eq,Read,Show)
 
 data Room = Room { rID :: String
                  , rTitle :: String
@@ -40,20 +47,46 @@ data Room = Room { rID :: String
                  , rVisited :: Bool
                  , rItems :: S.Set String
                  }
-                 deriving(Read)
+          deriving(Read)
 
 data Item = Item { iID :: String
                  , iPre :: String
                  , iName :: String
                  , iDesc :: String
+                 , iEvents :: EventHandlers
                  }
-                 deriving(Read)
+          deriving(Read)
 	
 data GameState = GameState { gsRooms :: M.Map String Room 
                            , gsItems :: M.Map String Item
                            , gsInRoom :: String
                            , gsInventory :: S.Set String
                            }
+
+data Event = EvLookAt
+           | EvDrop
+           | EvPickup
+           | EvRead
+           | EvMove
+           deriving(Ord,Eq,Read)
+
+data Command = IF Cond Command
+             | OpenExit String (Dir,String)
+             | CloseExit String Dir
+             | GetInventory String
+             | LoseInventory String
+             | Message String
+             deriving(Ord,Eq,Read)
+
+data Cond = InRoom String
+          | HasInventory String
+          | And Cond Cond
+          | Or Cond Cond
+          deriving(Ord,Eq,Read)
+          
+type Script = S.Set Command
+
+type EventHandlers = M.Map Event Script
 
 type Game a = StateT GameState IO a
 
@@ -101,6 +134,12 @@ updateRoom r = let rid = getRoomID r in do
   let newrooms = M.adjust (const r) rid $ gsRooms state
   put $ state{ gsRooms = newrooms }
 
+
+inRoom :: String -> Game Bool
+inRoom room = do
+	state <- get
+	return $ room == gsInRoom state
+
 updateInventory :: S.Set String -> Game ()
 updateInventory set = do
   state <- get
@@ -137,4 +176,72 @@ printRoom (Room { rTitle = title, rDesc = desc, rVisited = visited}) = do
   if visited
     then return ()
     else putStrLn desc
+
+evalCondition :: Cond -> Game Bool
+evalCondition (HasInventory inv) = hasInventory inv
+evalCondition (InRoom room) = inRoom room
+evalCondition (And c1 c2) = do
+  ec1 <- evalCondition c1
+  ec2 <- evalCondition c2
+  if ec1 == True then if ec2 == True then return True else return False else return False
+
+evalCondition (Or c1 c2) = do
+  ec1 <- evalCondition c1
+  ec2 <- evalCondition c2
+  if ec1 == True then return True else if ec2 == True then return True else return False
+
+
+evalCommand :: Command -> Game ()
+evalCommand (IF cond comm) = do
+	cstate <- evalCondition cond
+	if cstate == True
+	  then evalCommand comm
+	  else return ()
+
+evalCommand (OpenExit room exit) = cmdOpenExit room exit
+evalCommand (CloseExit room dir) = cmdCloseExit room dir
+evalCommand (GetInventory inv) = cmdGetInventory inv
+evalCommand (LoseInventory inv) = cmdLoseInventory inv
+evalCommand (Message msg) = lift $ putStrLn msg
+
+cmdOpenExit :: String -> (Dir,String) -> Game ()
+cmdOpenExit r (dir,newExit) = do
+  room <- getRoom r
+  let newExits = M.insert dir newExit (rExits room)
+  updateRoom room
+
+cmdCloseExit :: String -> Dir -> Game ()
+cmdCloseExit r dir = do
+  room <- getRoom r
+  let newExits = M.delete dir (rExits room)
+  updateRoom room
+
+cmdGetInventory :: String -> Game ()
+cmdGetInventory inv = do
+  state <- get
+  let newInventory = S.insert inv (gsInventory state)
+  updateInventory newInventory
+
+cmdLoseInventory :: String -> Game ()
+cmdLoseInventory inv = do
+  state <- get
+  let newInventory = S.delete inv (gsInventory state)
+  updateInventory newInventory
+
+runScript :: Script -> Game ()
+runScript s = runScript' $ S.elems s
+  where 
+    runScript' :: [Command] -> Game ()
+    runScript' [] = return ()
+    runScript' (c:cs) = do
+      evalCommand c
+      runScript' cs
+
+evalEvent :: Event -> EventHandlers -> Game Bool
+evalEvent event handlers = 
+  case (M.lookup event handlers) :: Maybe Script of
+    Just script -> do
+      runScript script
+      return True
+    Nothing -> return False
 

@@ -82,6 +82,8 @@ actLookAt at = do
     then do 
       item <- getItem at
       lift $ printItemInfo item
+      evalEvent EvLookAt (iEvents item)
+      return ()
     else do
       if S.member at (rItems room)
         then do 

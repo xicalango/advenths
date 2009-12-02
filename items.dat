@@ -2,10 +2,17 @@
       , iPre = "a brass"
       , iName = "lantern"
       , iDesc = "A small, brass lantern."
+      , iEvents = fromList [(EvLookAt,fromList [IF (Or (InRoom "house") (InRoom "main")
+                                                   ) (Message "hello")
+                                               ,(Message "da")
+                                               ]
+                            )
+                           ]
       }
 ,Item { iID = "keycard"
       , iPre = "a"
       , iName = "keycard"
       , iDesc = "A magnetic keycard"
+      , iEvents = fromList []
       }
 ]
