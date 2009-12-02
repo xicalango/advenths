@@ -36,7 +36,7 @@
 ,Room { rID = "forestpath"
       , rTitle = "Path in the forest"
       , rDesc = "You are in an open forest.\nA small trail leads somewhere in the woods"
-      , rExits = fromList [(West,"clearance"),(North,"fence1")]
+      , rExits = fromList [(East,"clearance"),(North,"fence1")]
       , rVisited = False
       , rItems = fromList []
       }
