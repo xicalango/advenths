@@ -180,15 +180,26 @@ printRoom (Room { rTitle = title, rDesc = desc, rVisited = visited}) = do
 evalCondition :: Cond -> Game Bool
 evalCondition (HasInventory inv) = hasInventory inv
 evalCondition (InRoom room) = inRoom room
-evalCondition (And c1 c2) = do
-  ec1 <- evalCondition c1
-  ec2 <- evalCondition c2
-  if ec1 == True then if ec2 == True then return True else return False else return False
-
 evalCondition (Or c1 c2) = do
   ec1 <- evalCondition c1
   ec2 <- evalCondition c2
-  if ec1 == True then return True else if ec2 == True then return True else return False
+  return $ ec1 `or` ec2
+--  if (ec1 == True) or (ec2 == True) then return True else return False
+  where
+   or :: Bool -> Bool -> Bool
+   or True _ = True
+   or _ True = True
+   or _ _ = False
+
+evalCondition (And c1 c2) = do
+  ec1 <- evalCondition c1
+  ec2 <- evalCondition c2
+  return $ ec1 `and` ec2
+--  if (ec1 == True) and (ec2 == True) then return True else return False
+  where
+   and :: Bool -> Bool -> Bool
+   and True True = True
+   and _ _ = False
 
 
 evalCommand :: Command -> Game ()
