@@ -43,7 +43,42 @@
 ,Room { rID = "fence1"
       , rTitle = "At a fence"
       , rDesc = "You followed the trail until it suddenly ends at an unpassable fence.\nYou can follow the fence to the east and to the west."
-      , rExits = fromList [(West,"fenceend1"),(East,"holefence"),(South,"forestpath")]
+      , rExits = fromList [(West,"fenceend1"),(East,"fence2"),(South,"forestpath")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "fenceend1"
+      , rTitle = "Dead end"
+      , rDesc = "You followed the fence until you've come to a dead end."
+      , rExits = fromList [(East,"fence1")]
+      , rVisited = False
+      , rItems = fromList ["keycard"]
+      }
+,Room { rID = "fence2"
+      , rTitle = "At a fence"
+      , rDesc = "You followed the fence until it makes a bend to the left.\n You can go back to the west or follow the fence to the north."
+      , rExits = fromList [(West,"fence1"),(North,"holefence")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "holefence"
+      , rTitle = "At a fence"
+      , rDesc = "You followed the fence further to the north until you've come to a noticeable hole in the fence, barely big enough that you can fit through."
+      , rExits = fromList [(South,"fence2"),(North,"fenceend2"),(West,"junction")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "fenceend2"
+      , rTitle = "Dead end"
+      , rDesc = "You followed the fence until you've come to a dead end."
+      , rExits = fromList [(South,"holefence")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "junction"
+      , rTitle = "Junction"
+      , rDesc = "Af"
+      , rExits = fromList [(South,"holefence")]
       , rVisited = False
       , rItems = fromList []
       }
