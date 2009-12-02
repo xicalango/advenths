@@ -1,30 +1,51 @@
-[Room { rID = "main"
-      , rTitle = "Mainway"
-      , rDesc = "This is the mainway.\nThere is a small passage to the north."
-      , rExits = fromList [(North,"back")]
+[Room { rID = "road"
+      , rTitle = "End of the road"
+      , rDesc = "You are standing at the end of a road before a small brick building. Around you is a forest. A small stream flows out of the building and down a gully."
+      , rExits = fromList [(East,"house"),(North,"forest1"),(South,"clearance"),(West,"forest2")]
       , rVisited = False 
-      , rItems = fromList ["cage"]
+      , rItems = fromList []
       }
-,Room { rID = "back"
-      , rTitle = "Backway"
-      , rDesc = "This is the backway.\nThere is a big passage to the south.\nAlso you can go east and west."
-      , rExits = fromList [(South,"main"),(East,"beast"),(West,"best")]
+,Room { rID = "house"
+      , rTitle = "Inside the house"
+      , rDesc = "You are inside the house, which seems to be something like a former outhouse. The stream seems to work as the sewers.\nThe only exit is the door to the west."
+      , rExits = fromList [(West,"road")]
       , rVisited = False
-      , rItems = fromList [] 
+      , rItems = fromList ["lantern"] 
       }
-,Room { rID = "beast"
-      , rTitle = "Back East"
-      , rDesc = "You have come to the beast!\nThe only exit is to the south."
-      , rExits = fromList [(South,"back")]
+,Room { rID = "forest1"
+      , rTitle = "In the forest"
+      , rDesc = "You are in an open forest near the end of the road."
+      , rExits = fromList [(North,"forest2"),(West,"clearance")]
       , rVisited = False
       , rItems = fromList [] 
 }
-,Room { rID = "best"
-      , rTitle = "Back West"
-      , rDesc = "This is the west.\nThe only exit is to the south."
-      , rExits = fromList [(South,"back")]
+,Room { rID = "forest2"
+      , rTitle = "In the forest"
+      , rDesc = "You are in an open forest near a clearance."
+      , rExits = fromList [(North,"forest1"),(West,"road")]
       , rVisited = False
-      , rItems = fromList ["rod"]
+      , rItems = fromList []
+      }
+,Room { rID = "clearance"
+      , rTitle = "Clearance"
+      , rDesc = "You are on a wide clearance with a forest all around you."
+      , rExits = fromList [(North,"road"),(West,"forestpath")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "forestpath"
+      , rTitle = "Path in the forest"
+      , rDesc = "You are in an open forest.\nA small trail leads somewhere in the woods"
+      , rExits = fromList [(West,"clearance"),(North,"fence1")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "fence1"
+      , rTitle = "At a fence"
+      , rDesc = "You followed the trail until it suddenly ends at an unpassable fence.\nYou can follow the fence to the east and to the west."
+      , rExits = fromList [(West,"fenceend1"),(East,"holefence"),(South,"forestpath")]
+      , rVisited = False
+      , rItems = fromList []
       }
 ]
 
