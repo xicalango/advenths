@@ -2,10 +2,10 @@
       , iPre = "a brass"
       , iName = "lantern"
       , iDesc = "A small, brass lantern."
-      , iEvents = fromList [(EvLookAt,fromList [IF (Or (InRoom "house") (InRoom "main")
-                                                   ) (Message "hello")
-                                               ,(Message "da")
-                                               ]
+      , iEvents = fromList [(EvLookAt,[IFELSE (Not (HasInventory "lantern")) 
+                                              ([Message "A brass lantern is standing in an edge of the room."]) 
+                                              ([Message "This is a brass lantern."])
+                                      ]
                             )
                            ]
       }

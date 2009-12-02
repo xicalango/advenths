@@ -70,7 +70,8 @@ data Event = EvLookAt
            | EvMove
            deriving(Ord,Eq,Read)
 
-data Command = IF Cond Command
+data Command = IF Cond Script
+             | IFELSE Cond Script Script
              | OpenExit String (Dir,String)
              | CloseExit String Dir
              | GetInventory String
@@ -82,9 +83,10 @@ data Cond = InRoom String
           | HasInventory String
           | And Cond Cond
           | Or Cond Cond
+          | Not Cond
           deriving(Ord,Eq,Read)
           
-type Script = S.Set Command
+type Script = [Command]
 
 type EventHandlers = M.Map Event Script
 
@@ -184,7 +186,6 @@ evalCondition (Or c1 c2) = do
   ec1 <- evalCondition c1
   ec2 <- evalCondition c2
   return $ ec1 `or` ec2
---  if (ec1 == True) or (ec2 == True) then return True else return False
   where
    or :: Bool -> Bool -> Bool
    or True _ = True
@@ -195,19 +196,31 @@ evalCondition (And c1 c2) = do
   ec1 <- evalCondition c1
   ec2 <- evalCondition c2
   return $ ec1 `and` ec2
---  if (ec1 == True) and (ec2 == True) then return True else return False
   where
    and :: Bool -> Bool -> Bool
    and True True = True
    and _ _ = False
 
+evalCondition (Not c) = do
+  ec <- evalCondition c
+  return $ not ec
+  where
+   not :: Bool -> Bool
+   not True = False
+   not _ = True
 
 evalCommand :: Command -> Game ()
-evalCommand (IF cond comm) = do
+evalCommand (IF cond scr) = do
 	cstate <- evalCondition cond
 	if cstate == True
-	  then evalCommand comm
+	  then runScript scr
 	  else return ()
+	  
+evalCommand (IFELSE cond scrtrue scrfalse) = do
+	cstate <- evalCondition cond
+	if cstate == True
+	  then runScript scrtrue
+	  else runScript scrfalse
 
 evalCommand (OpenExit room exit) = cmdOpenExit room exit
 evalCommand (CloseExit room dir) = cmdCloseExit room dir
@@ -240,13 +253,10 @@ cmdLoseInventory inv = do
   updateInventory newInventory
 
 runScript :: Script -> Game ()
-runScript s = runScript' $ S.elems s
-  where 
-    runScript' :: [Command] -> Game ()
-    runScript' [] = return ()
-    runScript' (c:cs) = do
-      evalCommand c
-      runScript' cs
+runScript [] = return ()
+runScript (c:cs) = do
+  evalCommand c
+  runScript cs
 
 evalEvent :: Event -> EventHandlers -> Game Bool
 evalEvent event handlers = 

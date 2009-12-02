@@ -81,14 +81,18 @@ actLookAt at = do
   if S.member at (gsInventory state)
     then do 
       item <- getItem at
-      lift $ printItemInfo item
-      evalEvent EvLookAt (iEvents item)
-      return ()
+      runEvent <- evalEvent EvLookAt (iEvents item)
+      if runEvent == True
+        then return ()
+        else lift $ printItemInfo item --Default action
     else do
       if S.member at (rItems room)
         then do 
 	  item <- getItem at
-	  lift $ printItemInfo item
+          runEvent <- evalEvent EvLookAt (iEvents item)
+          if runEvent == True
+            then return ()
+            else lift $ printItemInfo item --Default action
 	else lift $ putStrLn $ "Don't see " ++ at ++ " here."
 	
 actInventory :: Game ()
