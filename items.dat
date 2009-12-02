@@ -1,11 +1,11 @@
-[Item { iID = "cage"
-      , iPre = "a little"
-      , iName = "cage"
-      , iDesc = "A little cage."
+[Item { iID = "lantern"
+      , iPre = "a brass"
+      , iName = "lantern"
+      , iDesc = "A small, brass lantern."
       }
-,Item { iID = "rod"
+,Item { iID = "keycard"
       , iPre = "a"
-      , iName = "rod"
-      , iDesc = "A black and shiny rod."
+      , iName = "keycard"
+      , iDesc = "A magnetic keycard"
       }
 ]
