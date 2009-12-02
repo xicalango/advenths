@@ -1,4 +1,4 @@
-[Room { rID = "road"
+[Room { rID = "main"
       , rTitle = "End of the road"
       , rDesc = "You are standing at the end of a road before a small brick building. Around you is a forest. A small stream flows out of the building and down a gully."
       , rExits = fromList [(East,"house"),(North,"forest1"),(South,"clearance"),(West,"forest2")]
@@ -8,7 +8,7 @@
 ,Room { rID = "house"
       , rTitle = "Inside the house"
       , rDesc = "You are inside the house, which seems to be something like a former outhouse. The stream seems to work as the sewers.\nThe only exit is the door to the west."
-      , rExits = fromList [(West,"road")]
+      , rExits = fromList [(West,"main")]
       , rVisited = False
       , rItems = fromList ["lantern"] 
       }
@@ -22,14 +22,14 @@
 ,Room { rID = "forest2"
       , rTitle = "In the forest"
       , rDesc = "You are in an open forest near a clearance."
-      , rExits = fromList [(North,"forest1"),(West,"road")]
+      , rExits = fromList [(North,"forest1"),(West,"main")]
       , rVisited = False
       , rItems = fromList []
       }
 ,Room { rID = "clearance"
       , rTitle = "Clearance"
       , rDesc = "You are on a wide clearance with a forest all around you."
-      , rExits = fromList [(North,"road"),(West,"forestpath")]
+      , rExits = fromList [(North,"main"),(West,"forestpath")]
       , rVisited = False
       , rItems = fromList []
       }
