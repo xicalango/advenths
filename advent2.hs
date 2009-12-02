@@ -9,13 +9,6 @@ import System.IO
 import GameState
 import Action
 
-{-item = Item { iID = "lantern"
-            , iPre = "a brass"
-            , iName = "lantern"
-            , iDesc = "A small, brass lantern."
-            , iEvents = M.fromList [(EvLookAt, S.fromList [(IF (InRoom "bla") (Message "hello"))]) ]
-      }-}
-
 playGame :: Game ()
 playGame = do
   showCurrentRoom
@@ -46,7 +39,6 @@ doGame = do
 
 main :: IO ()
 main = do
-  --putStrLn $ show item
   hSetBuffering stdout NoBuffering
   evalStateT (doGame) $ emptyGameState
 

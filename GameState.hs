@@ -198,8 +198,9 @@ evalCondition (And c1 c2) = do
   return $ ec1 `and` ec2
   where
    and :: Bool -> Bool -> Bool
-   and True True = True
-   and _ _ = False
+   and False _ = False
+   and _ False = False
+   and _ _ = True
 
 evalCondition (Not c) = do
   ec <- evalCondition c
