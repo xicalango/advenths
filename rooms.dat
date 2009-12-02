@@ -64,7 +64,7 @@
 ,Room { rID = "holefence"
       , rTitle = "At a fence"
       , rDesc = "You followed the fence further to the north until you've come to a noticeable hole in the fence, barely big enough that you can fit through."
-      , rExits = fromList [(South,"fence2"),(North,"fenceend2"),(West,"junction")]
+      , rExits = fromList [(South,"fence2"),(North,"fenceend2"),(West,"turn")]
       , rVisited = False
       , rItems = fromList []
       }
@@ -75,10 +75,24 @@
       , rVisited = False
       , rItems = fromList []
       }
-,Room { rID = "junction"
-      , rTitle = "Junction"
-      , rDesc = "Af"
-      , rExits = fromList [(South,"holefence")]
+,Room { rID = "turn"
+      , rTitle = "Turn of a road"
+      , rDesc = "After crawling through the hole, you walked over wide plains, passing huge antennas every now and then. Finally you arrived at a turn of a tarred road.\n To the north you can see a building. To the west you can see a far away gate. To the east you can see the huge plaines you came from."
+      , rExits = fromList [(West,"gate"),(East,"holefence"),(North,"entrance")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "gate"
+      , rTitle = "High security gate"
+      , rDesc = "You are standing before a gate in the fence. You cannot see where the road leads."
+      , rExits = fromList [(East,"turn")]
+      , rVisited = False
+      , rItems = fromList []
+      }
+,Room { rID = "entrance"
+      , rTitle = "Entrance to the building"
+      , rDesc = "You are standing outside of a building errected during the cold war. A sign over the entrancedoor reads \"Wullenwever HF antenna array station\" The entrance seems not to be locked."
+      , rExits = fromList [(South,"turn")]
       , rVisited = False
       , rItems = fromList []
       }
