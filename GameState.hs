@@ -71,24 +71,26 @@ data Event = EvLookAt
            | EvMove
            deriving(Ord,Eq,Read)
 
-data Command = IF Cond Script
-             | IFELSE Cond Script Script
-             | OpenExit String (Dir,String)
-             | CloseExit String Dir
-             | GetInventory String
-             | LoseInventory String
-             | Message String
-             | SetVar String String
-             | ClearVar String
+data Command = IF Cond Script			-- If Condition is True run Script
+             | IFELSE Cond Script Script	-- If Condition is True run first Script, else run second Script
+             | OpenExit String (Dir,String)	-- In room named with the first string, open the Exit given by the Tuple
+             | CloseExit String Dir		-- In room named by the first string, close the Exit to Dir
+             | GetInventory String		-- Add the given Inventory object
+             | LoseInventory String		-- Remove the given Inventory object
+             | Message String			-- Print a message
+             | SetVar String String		-- Give the variable ,named by first string, the value of the second string
+             | ClearVar String			-- Clear the variable with the given name
+             | PrintVar String			-- Print Variable given by the first string
+             | PlaceItem String String		-- Put Item given by second string in room given by the first string
              deriving(Ord,Eq,Read)
 
-data Cond = InRoom String
-          | HasInventory String
-          | VarSet String
-          | VarEq String String
-          | And Cond Cond
-          | Or Cond Cond
-          | Not Cond
+data Cond = InRoom String			-- Checks if player is in the room given by string string
+          | HasInventory String			-- Checks if player has the inventory item given by the string
+          | VarSet String			-- Checks if the variable given by the string exists
+          | VarEq String String			-- Checks if the value of the variable given by the fst string equals the snd string
+          | And Cond Cond			-- Is true when both given conditions are true
+          | Or Cond Cond			-- Is true when either one of the given conditions is true
+          | Not Cond				-- Is true when the given condition is false
           deriving(Ord,Eq,Read)
           
 type Script = [Command]
@@ -246,6 +248,8 @@ evalCommand (LoseInventory inv) = cmdLoseInventory inv
 evalCommand (Message msg) = lift $ putStrLn msg
 evalCommand (SetVar var val) = cmdSetVar var val
 evalCommand (ClearVar var) = cmdClearVar var
+evalCommand (PrintVar var) = cmdPrintVar var
+evalCommand (PlaceItem rid iid) = cmdPlaceItem rid iid
 
 cmdOpenExit :: String -> (Dir,String) -> Game ()
 cmdOpenExit r (dir,newExit) = do
@@ -282,6 +286,20 @@ cmdClearVar var = do
   state <- get
   let newVars = M.delete var (gsVariables state)
   put $ state{gsVariables = newVars}
+
+cmdPrintVar :: String -> Game ()
+cmdPrintVar var = do
+  state <- get
+  case ( M.lookup var (gsVariables state) ) :: Maybe String of
+    Just val -> lift $ putStrLn val
+    Nothing -> lift $ putStrLn $ "!!Error: Variable '" ++ var ++ "' unset!!"
+
+cmdPlaceItem :: String -> String -> Game ()
+cmdPlaceItem rid iid = do
+  state <- get
+  room <- getRoom rid
+  let newRoomItems = S.insert iid (rItems room)
+  updateRoom room{rItems = newRoomItems}
 
 runScript :: Script -> Game ()
 runScript [] = return ()
