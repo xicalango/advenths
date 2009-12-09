@@ -61,6 +61,7 @@ data GameState = GameState { gsRooms :: M.Map String Room
                            , gsItems :: M.Map String Item
                            , gsInRoom :: String
                            , gsInventory :: S.Set String
+                           , gsVariables :: M.Map String String
                            }
 
 data Event = EvLookAt
@@ -77,10 +78,14 @@ data Command = IF Cond Script
              | GetInventory String
              | LoseInventory String
              | Message String
+             | SetVar String String
+             | ClearVar String
              deriving(Ord,Eq,Read)
 
 data Cond = InRoom String
           | HasInventory String
+          | VarSet String
+          | VarEq String String
           | And Cond Cond
           | Or Cond Cond
           | Not Cond
@@ -92,7 +97,7 @@ type EventHandlers = M.Map Event Script
 
 type Game a = StateT GameState IO a
 
-emptyGameState = GameState M.empty M.empty "" S.empty
+emptyGameState = GameState M.empty M.empty "" S.empty M.empty
 
 buildGame :: [Room] -> [Item] -> Game ()
 buildGame newRooms newItems = do
@@ -182,6 +187,17 @@ printRoom (Room { rTitle = title, rDesc = desc, rVisited = visited}) = do
 evalCondition :: Cond -> Game Bool
 evalCondition (HasInventory inv) = hasInventory inv
 evalCondition (InRoom room) = inRoom room
+
+evalCondition (VarSet var) = do
+  state <- get
+  return $ M.member var (gsVariables state)
+
+evalCondition (VarEq var val) = do
+  state <- get
+  case ( M.lookup var (gsVariables state) ) :: Maybe String of
+    Just str -> return $ val == str
+    Nothing -> return False
+
 evalCondition (Or c1 c2) = do
   ec1 <- evalCondition c1
   ec2 <- evalCondition c2
@@ -227,6 +243,8 @@ evalCommand (CloseExit room dir) = cmdCloseExit room dir
 evalCommand (GetInventory inv) = cmdGetInventory inv
 evalCommand (LoseInventory inv) = cmdLoseInventory inv
 evalCommand (Message msg) = lift $ putStrLn msg
+evalCommand (SetVar var val) = cmdSetVar var val
+evalCommand (ClearVar var) = cmdClearVar var
 
 cmdOpenExit :: String -> (Dir,String) -> Game ()
 cmdOpenExit r (dir,newExit) = do
@@ -251,6 +269,18 @@ cmdLoseInventory inv = do
   state <- get
   let newInventory = S.delete inv (gsInventory state)
   updateInventory newInventory
+
+cmdSetVar :: String -> String -> Game ()
+cmdSetVar var val = do
+  state <- get
+  let newVars = if M.member var (gsVariables state) then M.adjust (const val) var (gsVariables state) else M.insert var val (gsVariables state)
+  put $ state{gsVariables = newVars}
+
+cmdClearVar :: String -> Game ()
+cmdClearVar var = do
+  state <- get
+  let newVars = M.delete var (gsVariables state)
+  put $ state{gsVariables = newVars}
 
 runScript :: Script -> Game ()
 runScript [] = return ()
