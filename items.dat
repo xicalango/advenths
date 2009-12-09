@@ -13,6 +13,24 @@
       , iPre = "a"
       , iName = "keycard"
       , iDesc = "A magnetic keycard"
-      , iEvents = fromList []
+      , iEvents = fromList [(EvLookAt,[IFELSE (VarEq "bla" "true")
+
+                                              ([Message "true"
+                                               ,SetVar "bla" "false"
+                                              ])
+
+                                              ([IFELSE (VarEq "bla" "gna") 
+
+                                                      ([Message "gna"
+                                                       ,SetVar "bla" "true"
+                                                      ])
+
+                                                      ([Message "false"
+                                                       ,SetVar "bla" "gna"
+                                                      ])
+                                              ])
+                                      ]
+                            )
+                           ]
       }
 ]
