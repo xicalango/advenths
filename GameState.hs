@@ -143,7 +143,6 @@ updateRoom r = let rid = getRoomID r in do
   let newrooms = M.adjust (const r) rid $ gsRooms state
   put $ state{ gsRooms = newrooms }
 
-
 inRoom :: String -> Game Bool
 inRoom room = do
 	state <- get
