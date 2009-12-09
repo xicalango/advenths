@@ -61,6 +61,7 @@ data GameState = GameState { gsRooms :: M.Map String Room
                            , gsItems :: M.Map String Item
                            , gsInRoom :: String
                            , gsInventory :: S.Set String
+--                         , gsVariables :: S.Map String String
                            }
 
 data Event = EvLookAt
@@ -77,6 +78,7 @@ data Command = IF Cond Script
              | GetInventory String
              | LoseInventory String
              | Message String
+--           | SetVar String String
              deriving(Ord,Eq,Read)
 
 data Cond = InRoom String
@@ -84,6 +86,7 @@ data Cond = InRoom String
           | And Cond Cond
           | Or Cond Cond
           | Not Cond
+--        | CheckVar String String
           deriving(Ord,Eq,Read)
           
 type Script = [Command]
